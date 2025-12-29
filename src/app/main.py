@@ -7,7 +7,7 @@ from app.core.exception_handler import register_exception_handlers
 from app.db.session import db
 from app.utils.deps import get_health_status
 from app.db import base
-from app.api.v1.endpoints import user, auth
+from app.api.v1.endpoints import user, auth,center
 
 
 @asynccontextmanager
@@ -34,6 +34,7 @@ def create_application() -> FastAPI:
 
     app.include_router(auth.router)
     app.include_router(user.router)
+    app.include_router(center.router)
 
     origins = [
         "http://localhost:5173",  # Vite/React frontend dev server

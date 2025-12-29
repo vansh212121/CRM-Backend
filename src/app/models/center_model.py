@@ -21,7 +21,7 @@ class CenterBase(SQLModel):
         default=None, sa_column=Column(String(100), nullable=True, index=True)
     )
     pincode: str = Field(sa_column=Column(String(10), nullable=False, index=True))
-    email: Optional[str] = Field(default=None)
+    email: Optional[str] = Field(default=None, index=True)
     clinic_url: Optional[str] = Field(default=None)
     google_map_url: Optional[str] = Field(default=None)
 
