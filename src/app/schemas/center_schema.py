@@ -22,9 +22,10 @@ class CenterBase(BaseModel):
         max_length=100,
         description="District where the center is located",
     )
-    services: Dict[str, Any] = Field(
+    services: List[str] = Field(
         ...,
-        description="Services offered by the center",
+        description="List of services offered (e.g., ['Audiological Evaluation', 'Other Services'])",
+        min_length=1,  # Must have at least one service
     )
     name: str = Field(
         ...,
@@ -123,7 +124,12 @@ class CenterCreate(CenterBase):
 
 class CenterUpdate(BaseModel):
     district: Optional[str] = Field(None, min_length=2, max_length=100)
-    services: Optional[Dict[str, Any]] = None
+    # services: Optional[Dict[str, Any]] = None
+    services: Optional[List[str]] = Field(
+        None,
+        description="List of services offered (e.g., ['Audiological Evaluation', 'Other Services'])",
+        min_length=1,  # Must have at least one service
+    )
     name: Optional[str] = Field(None, min_length=2, max_length=200)
     contact: Optional[str] = Field(None, min_length=7, max_length=20)
     address: Optional[str] = Field(None, min_length=5, max_length=500)

@@ -66,6 +66,19 @@ class CenterRepository(BaseRepository[Center]):
         default_exception=InternalServerError,
         message="An unexpected database error occurred.",
     )
+    async def get_by_name(self, db: AsyncSession, *, name: str) -> Optional[Center]:
+        """get center by it's Name"""
+
+        statement = select(self.model).where(
+            func.lower(self.model.name) == name.lower()
+        )
+        result = await db.execute(statement)
+        return result.scalar_one_or_none()
+
+    @handle_exceptions(
+        default_exception=InternalServerError,
+        message="An unexpected database error occurred.",
+    )
     async def get_all(
         self,
         db: AsyncSession,
@@ -166,6 +179,9 @@ class CenterRepository(BaseRepository[Center]):
         if "landmark" in filters and filters["landmark"]:
             conditions.append(Center.landmark == filters["landmark"])
 
+        if "contact" in filters and filters["contact"]:
+            conditions.append(Center.contact == filters["contact"])
+
         if "pincode" in filters and filters["pincode"]:
             conditions.append(Center.pincode == filters["pincode"])
 
@@ -180,6 +196,7 @@ class CenterRepository(BaseRepository[Center]):
                     Center.name.ilike(search_term),
                     Center.location.ilike(search_term),
                     Center.landmark.ilike(search_term),
+                    Center.contact.ilike(search_term),
                     Center.pincode.ilike(search_term),
                     Center.email.ilike(search_term),
                 )

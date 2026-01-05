@@ -24,6 +24,7 @@ from app.models.center_model import Center
 from app.core.exception_utils import raise_for_status
 from app.core.exceptions import (
     ResourceNotFound,
+    ResourceAlreadyExists,
     ValidationError,
 )
 
@@ -102,7 +103,17 @@ class CenterService:
     ) -> Center:
         """Handles the business logic of creating a new center."""
 
-        center_dict = center_dict.model_dump()
+        existing_center = await self.center_repository.get_by_name(
+            db=db, name=center_dict.name
+        )
+        raise_for_status(
+            condition=(existing_center is not None),
+            exception=ResourceAlreadyExists,
+            detail=f"Center with name {center_dict.name} already exists",
+            resource_type="Center",
+        )
+
+        center_dict = center_dict.model_dump(mode="json")
         center_dict["user_id"] = current_user.id
         center_dict["created_at"] = datetime.now(timezone.utc)
         center_dict["updated_at"] = datetime.now(timezone.utc)
@@ -135,7 +146,9 @@ class CenterService:
             resource_type="Center",
         )
 
-        update_dict = center_data.model_dump(exclude_unset=True, exclude_none=True)
+        update_dict = center_data.model_dump(
+            exclude_unset=True, exclude_none=True, mode="json"
+        )
 
         # Remove timestamp fields that should not be manually updated
         for ts_field in {"created_at", "updated_at"}:
