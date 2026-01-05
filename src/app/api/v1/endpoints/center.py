@@ -21,7 +21,6 @@ from app.utils.deps import (
     PaginationParams,
     get_pagination_params,
 )
-from app.services.user_service import user_service
 from app.services.center_service import center_service
 
 logger = logging.getLogger(__name__)
