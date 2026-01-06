@@ -15,9 +15,9 @@ from app.schemas.appointment_schema import (
     AppointmentListResponse,
     AppointmentResponse,
     AppointmentSearchParams,
+    CompleteAppointment,
 )
 from app.models.user_model import User
-
 from app.db.session import get_session
 from app.utils.deps import (
     get_current_user,
@@ -48,6 +48,7 @@ router = APIRouter(
 async def get_all_appointments(
     *,
     db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
     pagination: PaginationParams = Depends(get_pagination_params),
     search_params: AppointmentSearchParams = Depends(AppointmentSearchParams),
     order_by: str = Query("created_at", description="Field to order by"),
@@ -58,6 +59,7 @@ async def get_all_appointments(
     return await appointment_service.get_all_appointments(
         db=db,
         skip=pagination.skip,
+        current_user=current_user,
         limit=pagination.limit,
         filters=search_params.model_dump(exclude_none=True),
         order_by=order_by,
@@ -107,8 +109,8 @@ async def create_pending_request(
 @router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
-    summary="Make a pending request",
-    description="Make a pending request(Public only)",
+    summary="Schedule Appointment",
+    description="Schedule an Appointment(Public only)",
     response_model=AppointmentResponse,
     dependencies=[Depends(rate_limit_api)],
 )
@@ -208,6 +210,29 @@ async def reject_appointment(
     current_user: User = Depends(get_current_user),
 ):
     return await appointment_service.reject_appointment(
+        db=db,
+        current_user=current_user,
+        appointment_data=appointment_data,
+        appointment_id=appointment_id,
+    )
+
+
+@router.patch(
+    "/{appointment_id}/complete",
+    status_code=status.HTTP_200_OK,
+    response_model=AppointmentResponse,
+    summary="change status",
+    description="Change status to Completed",
+    dependencies=[Depends(rate_limit_api)],
+)
+async def complete_appointment(
+    *,
+    appointment_id: uuid.UUID,
+    appointment_data: CompleteAppointment,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    return await appointment_service.complete_appointment(
         db=db,
         current_user=current_user,
         appointment_data=appointment_data,

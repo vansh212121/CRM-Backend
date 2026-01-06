@@ -20,7 +20,6 @@ from app.schemas.user_schema import (
 )
 from app.models.user_model import User
 
-# from app.services.cache_service import cache_service
 from app.core.exception_utils import raise_for_status
 from app.core.exceptions import (
     ResourceNotFound,

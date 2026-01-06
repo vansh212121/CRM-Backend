@@ -3,11 +3,9 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-
+from typing import Any, Dict, List, Optional, Union
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-
 from app.core.config import settings
 from app.core.exceptions import (
     InternalServerError,

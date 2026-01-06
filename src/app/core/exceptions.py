@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Dict, Optional, Any, List
 
-
 class ErrorCode(str, Enum):
     """Enumeration of error codes for consistent error identification."""
 

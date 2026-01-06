@@ -9,7 +9,6 @@ from app.utils.deps import get_health_status
 from app.db import base
 from app.api.v1.endpoints import user, auth,center,appointment
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """

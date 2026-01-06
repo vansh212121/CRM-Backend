@@ -1,5 +1,4 @@
 # app/core/config.py
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
@@ -36,6 +35,14 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     JWT_ALGORITHM: str = "HS256"
+
+    # --- Email Settings ---
+    MAIL_FROM_NAME: str
+    MAIL_FROM: str
+    MAIL_SERVER: str
+    MAIL_PORT: int = 587
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
 
     # --- Model Configuration ---
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

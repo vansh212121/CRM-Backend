@@ -1,7 +1,6 @@
 import logging
 from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
-
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import settings

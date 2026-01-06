@@ -4,7 +4,6 @@ from typing import Dict
 from fastapi import APIRouter, Depends, status, Query
 
 from sqlmodel.ext.asyncio.session import AsyncSession
-
 from app.core.config import settings
 from app.schemas.center_schema import (
     CenterResponse,

@@ -1,8 +1,7 @@
 import re
 import uuid
 from typing import Optional, List
-from datetime import datetime, date
-
+from datetime import datetime, date, timezone
 from pydantic import (
     BaseModel,
     Field,
@@ -99,7 +98,10 @@ class CreateAdminAppointment(AppointmentBase):
     @field_validator("appointment_date")
     @classmethod
     def validate_appointment_date(cls, v: datetime) -> datetime:
-        if v < datetime.now():
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+
+        if v < datetime.now(timezone.utc):
             raise ValidationError("Appointment date must be in the future")
         return v
 
@@ -114,7 +116,10 @@ class ConfirmAppointment(BaseModel):
     @field_validator("appointment_date")
     @classmethod
     def validate_appointment_date(cls, v: datetime) -> datetime:
-        if v < datetime.now():
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+
+        if v < datetime.now(timezone.utc):
             raise ValidationError("Appointment date must be in the future")
         return v
 
@@ -125,7 +130,10 @@ class RescheduleAppointment(BaseModel):
     @field_validator("appointment_date")
     @classmethod
     def validate_appointment_date(cls, v: datetime) -> datetime:
-        if v < datetime.now():
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+
+        if v < datetime.now(timezone.utc):
             raise ValidationError("Appointment date must be in the future")
         return v
 
@@ -144,6 +152,21 @@ class CancelAppointment(BaseModel):
         v = " ".join(v.strip().split())
         if not v:
             raise ValidationError("Cancellation reason cannot be empty")
+        return v
+
+
+class CompleteAppointment(BaseModel):
+    notes: Optional[str] = Field(
+        None, max_length=1000, description="Final outcome notes"
+    )
+
+    # Validation for notes (reuse existing cleaner)
+    @field_validator("notes")
+    @classmethod
+    def clean_strings(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        v = " ".join(v.strip().split())
         return v
 
 
@@ -206,6 +229,7 @@ class AppointmentSearchParams(BaseModel):
     name: Optional[str] = None
     contact: Optional[str] = None
     email: Optional[EmailStr] = None
+    status: Optional[AppointmentStatus] = None
     appointment_date: Optional[date] = None
 
     created_after: Optional[date] = Field(

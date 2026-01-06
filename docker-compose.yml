@@ -1,0 +1,49 @@
+services:
+  api:
+    build: .
+    container_name: crm_backend_api
+    # Pass environment variables from your local .env file
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # Map local src to container for hot-reloading
+      - ./src/app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - crm_network
+
+  worker:
+    build: .
+    container_name: crm_backend_worker
+    env_file: .env
+    volumes:
+      - ./src/app:/app/app
+    # We will add the celery_worker.py file in the next step
+    command: celery -A app.celery_worker worker --loglevel=info
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - crm_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: crm_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - crm_network
+
+networks:
+  crm_network:
+    driver: bridge
