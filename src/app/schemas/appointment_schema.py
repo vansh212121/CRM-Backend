@@ -230,12 +230,19 @@ class AppointmentSearchParams(BaseModel):
     contact: Optional[str] = None
     email: Optional[EmailStr] = None
     status: Optional[AppointmentStatus] = None
-    appointment_date: Optional[date] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
     created_after: Optional[date] = Field(
         None, description="Filter appointments created after this date"
     )
     created_before: Optional[date] = Field(
+        None, description="Filter appointments created before this date"
+    )
+    updated_after: Optional[date] = Field(
+        None, description="Filter appointments created after this date"
+    )
+    updated_before: Optional[date] = Field(
         None, description="Filter appointments created before this date"
     )
 
@@ -249,6 +256,9 @@ class AppointmentSearchParams(BaseModel):
         if self.created_after and self.created_before:
             if self.created_after > self.created_before:
                 raise ValidationError("created_after must be before created_before")
+        if self.updated_after and self.updated_before:
+            if self.updated_after > self.updated_before:
+                raise ValidationError("updated_after must be before updated_before")
         return self
 
 

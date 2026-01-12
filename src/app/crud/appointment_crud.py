@@ -2,7 +2,7 @@ import logging
 import uuid
 from typing import Optional, List, Dict, Any, TypeVar, Generic, Tuple
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select, func, and_, or_, delete
@@ -10,7 +10,7 @@ from sqlmodel import select, func, and_, or_, delete
 from app.core.exception_utils import handle_exceptions
 from app.core.exceptions import InternalServerError
 
-from app.models.appointment_model import Appointment
+from app.models.appointment_model import Appointment, AppointmentStatus
 
 
 logger = logging.getLogger(__name__)
@@ -61,6 +61,20 @@ class AppointmentRepository(BaseRepository[Appointment]):
         """get a Appointment by it's ID"""
 
         statement = select(self.model).where(self.model.id == obj_id)
+        result = await db.execute(statement)
+        return result.scalar_one_or_none()
+
+    @handle_exceptions(
+        default_exception=InternalServerError,
+        message="An unexpected database error occurred.",
+    )
+    async def get_by_email(
+        self, db: AsyncSession, *, email: str
+    ) -> Optional[Appointment]:
+        """fetch by email"""
+        statement = select(self.model).where(
+            self.model.email == email, self.model.status == AppointmentStatus.PENDING
+        )
         result = await db.execute(statement)
         return result.scalar_one_or_none()
 
@@ -169,9 +183,28 @@ class AppointmentRepository(BaseRepository[Appointment]):
             conditions.append(Appointment.appointment_date >= filters["start_date"])
 
         if "end_date" in filters and filters["end_date"]:
-            conditions.append(Appointment.appointment_date <= filters["end_date"])
+            next_day = filters["end_date"] + timedelta(days=1)
+            conditions.append(Appointment.appointment_date < next_day)
 
-        # --- 3. Strict Match Filters ---
+        # --- 3. Created At Range Filters (NEW) ---
+        if "created_after" in filters and filters["created_after"]:
+            conditions.append(Appointment.created_at >= filters["created_after"])
+
+        if "created_before" in filters and filters["created_before"]:
+            # Same logic: Include the full 'before' day
+            next_day = filters["created_before"] + timedelta(days=1)
+            conditions.append(Appointment.created_at < next_day)
+
+        # --- 4. Updated At Range Filters (NEW) ---
+        if "updated_after" in filters and filters["updated_after"]:
+            conditions.append(Appointment.updated_at >= filters["updated_after"])
+
+        if "updated_before" in filters and filters["updated_before"]:
+            # Same logic: Include the full 'before' day
+            next_day = filters["updated_before"] + timedelta(days=1)
+            conditions.append(Appointment.updated_at < next_day)
+
+        # --- 5. Strict Match Filters ---
         if "name" in filters and filters["name"]:
             conditions.append(Appointment.name == filters["name"])
 
@@ -181,7 +214,7 @@ class AppointmentRepository(BaseRepository[Appointment]):
         if "email" in filters and filters["email"]:
             conditions.append(Appointment.email == filters["email"])
 
-        # --- 4. Fuzzy Search ---
+        # --- 6. Fuzzy Search ---
         if "search" in filters and filters["search"]:
             search_term = f"%{filters['search']}%"
             conditions.append(

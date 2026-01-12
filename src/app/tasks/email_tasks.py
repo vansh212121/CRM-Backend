@@ -5,8 +5,15 @@ from app.core import email
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task
-def send_acknowledgement_email_sync(email_to: str, name: str):
+@celery_app.task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 30},
+    retry_backoff=True,
+    retry_jitter=True,
+    ignore_result=True,
+)
+def send_acknowledgement_email_sync(self, email_to: str, name: str):
     """
     A Celery task that calls the synchronous email function to send acknowledgement email.
     """
@@ -20,8 +27,15 @@ def send_acknowledgement_email_sync(email_to: str, name: str):
         )
 
 
-@celery_app.task
-def send_confirmation_email_task(email_to: str, name: str, date_str: str):
+@celery_app.task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 30},
+    retry_backoff=True,
+    retry_jitter=True,
+    ignore_result=True,
+)
+def send_confirmation_email_task(self, email_to: str, name: str, date_str: str):
     logger.info(f"Worker received task: send confirmation to {email_to}")
     try:
         email.send_confirmation_email_sync(
@@ -32,8 +46,15 @@ def send_confirmation_email_task(email_to: str, name: str, date_str: str):
         logger.error(f"Failed to send confirmation to {email_to}: {e}", exc_info=True)
 
 
-@celery_app.task
-def send_followup_email_task(email_to: str, name: str):
+@celery_app.task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 30},
+    retry_backoff=True,
+    retry_jitter=True,
+    ignore_result=True,
+)
+def send_followup_email_task(self, email_to: str, name: str):
     logger.info(f"Worker received task: send follow-up to {email_to}")
     try:
         email.send_followup_email_sync(email_to=email_to, name=name)
@@ -42,8 +63,15 @@ def send_followup_email_task(email_to: str, name: str):
         logger.error(f"Failed to send follow-up to {email_to}: {e}", exc_info=True)
 
 
-@celery_app.task
-def send_booking_email_task(email_to: str, name: str, date_str: str):
+@celery_app.task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 30},
+    retry_backoff=True,
+    retry_jitter=True,
+    ignore_result=True,
+)
+def send_booking_email_task(self, email_to: str, name: str, date_str: str):
     logger.info(f"Worker received task: send booking to {email_to}")
     try:
         email.send_booking_email_sync(email_to=email_to, name=name, date_str=date_str)
@@ -52,9 +80,16 @@ def send_booking_email_task(email_to: str, name: str, date_str: str):
         logger.error(f"Failed to send booking to {email_to}: {e}", exc_info=True)
 
 
-@celery_app.task
+@celery_app.task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 30},
+    retry_backoff=True,
+    retry_jitter=True,
+    ignore_result=True,
+)
 def send_reschedule_email_task(
-    email_to: str, name: str, old_date_str: str, new_date_str: str
+    self, email_to: str, name: str, old_date_str: str, new_date_str: str
 ):
     logger.info(f"Worker received task: send reschedule notice to {email_to}")
     try:
@@ -71,8 +106,15 @@ def send_reschedule_email_task(
         )
 
 
-@celery_app.task
-def send_rejection_email_task(email_to: str, name: str, reason: str):
+@celery_app.task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 30},
+    retry_backoff=True,
+    retry_jitter=True,
+    ignore_result=True,
+)
+def send_rejection_email_task(self, email_to: str, name: str, reason: str):
     logger.info(f"Worker received task: send rejection to {email_to}")
     try:
         email.send_rejection_email_sync(email_to=email_to, name=name, reason=reason)
@@ -81,8 +123,15 @@ def send_rejection_email_task(email_to: str, name: str, reason: str):
         logger.error(f"Failed to send rejection to {email_to}: {e}", exc_info=True)
 
 
-@celery_app.task
-def send_cancellation_email_task(email_to: str, name: str, reason: str):
+@celery_app.task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 30},
+    retry_backoff=True,
+    retry_jitter=True,
+    ignore_result=True,
+)
+def send_cancellation_email_task(self, email_to: str, name: str, reason: str):
     logger.info(f"Worker received task: send cancellation to {email_to}")
     try:
         email.send_cancellation_email_sync(email_to=email_to, name=name, reason=reason)

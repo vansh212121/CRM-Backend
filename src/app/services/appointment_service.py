@@ -22,6 +22,7 @@ from app.core.exceptions import (
     ResourceNotFound,
     BadRequestException,
     ValidationError,
+    ResourceAlreadyExists,
 )
 from app.tasks.email_tasks import (
     send_acknowledgement_email_sync,
@@ -119,6 +120,16 @@ class AppointmentService:
         appointment_dict["updated_at"] = datetime.now(timezone.utc)
 
         appointment_to_create = Appointment(**appointment_dict)
+
+        existing_user = await self.appointment_repository.get_by_email(
+            db=db, email=appointment_to_create.email
+        )
+        raise_for_status(
+            condition=(existing_user is not None),
+            exception=ResourceAlreadyExists,
+            detail=f"We have recieved your request, Our team will reach out to you shortly",
+            resource_type="Appointment",
+        )
 
         new_appointment = await self.appointment_repository.create(
             db=db, db_obj=appointment_to_create
